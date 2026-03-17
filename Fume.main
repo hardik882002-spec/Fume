@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Doppelgänger — Future Self Simulator</title>
+
+  <!-- ═══════════════════════════════════════════════════
+       FIREBASE CONFIG
+  ═══════════════════════════════════════════════════ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getAnalytics }  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyCjGhTPNTe975C1BnlIYTsHnahc4rp9jCc",
+      authDomain:        "fume-4f32d.firebaseapp.com",
+      projectId:         "fume-4f32d",
+      storageBucket:     "fume-4f32d.firebasestorage.app",
+      messagingSenderId: "575625924369",
+      appId:             "1:575625924369:web:7045daa2fbec5cc80086b0",
+      measurementId:     "G-2ZXFWQC4DN"
+    };
+
+    const app       = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    window._firebaseApp       = app;
+    window._firebaseAnalytics = analytics;
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --g:     #c9a96e;
+      --gd:    #a07840;
+      --gs:    #e8c98a;
+      --bg:    #111008;
+      --s1:    #1a1710;
+      --s2:    #231f14;
+      --bd:    rgba(201,169,110,0.25);
+      --bdh:   rgba(201,169,110,0.5);
+      --tx:    #f0ead8;
+      --tm:    rgba(240,234,216,0.6);
+      --td:    rgba(240,234,216,0.3);
+      --serif: Georgia, 'Times New Roman', serif;
+      --mono:  'Courier New', Courier, monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--tx);
+      font-family: var(--serif);
+      font-size: 16px;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* SCREENS */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeUp 0.45s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* INTRO */
+    .hero {
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 0;
+    }
+    .orb {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--bdh);
+      margin: 0 auto 32px;
+      position: relative;
+    }
+    .orb::after {
+      content: '';
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      background: var(--gd);
+      opacity: 0.45;
+    }
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: var(--gd);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .hero-title {
+      font-size: clamp(38px, 8vw, 56px);
+      font-weight: normal;
+      line-height: 1.1;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .hero-title em { font-style: italic; color: var(--g); }
+    .hero-sub {
+      font-size: 17px;
+      font-style: italic;
+      color: var(--tm);
+      line-height: 1.75;
+      max-width: 340px;
+      margin: 0 auto 40px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-block;
+      background: var(--g);
+      color: #2a1500;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 15px 44px;
+      cursor: pointer;
+      border: 2px solid var(--gs);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover  { background: var(--gs); }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-ghost {
+      background: rgba(201,169,110,0.12);
+      border: 2px solid var(--g);
+      color: var(--gs);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { background: rgba(201,169,110,0.25); color: #fff; }
+
+    .csend {
+      background: var(--g);
+      border: none;
+      color: #2a1500;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 13px 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .csend:hover { background: var(--gs); }
+
+    /* ONBOARDING */
+    .ob-head { padding: 36px 0 22px; text-align: center; }
+    .ob-step {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gd);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .ob-title { font-size: 26px; font-weight: normal; color: #fff; margin-bottom: 6px; }
+    .ob-desc  { font-size: 15px; font-style: italic; color: var(--tm); }
+
+    .prog { display: flex; gap: 6px; justify-content: center; margin-bottom: 30px; }
+    .pdot { height: 3px; width: 38px; background: var(--bd); transition: background 0.3s; }
+    .pdot.done   { background: var(--g); }
+    .pdot.active { background: var(--gd); }
+
+    .fgrp { margin-bottom: 24px; }
+    .flabel {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gd);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .finput {
+      width: 100%;
+      background: var(--s1);
+      border: 1px solid var(--bd);
+      color: var(--tx);
+      font-family: var(--serif);
+      font-size: 17px;
+      padding: 13px 16px;
+      outline: none;
+      transition: border-color 0.25s;
+    }
+    .finput:focus { border-color: var(--g); }
+    .finput::placeholder { color: var(--td); font-style: italic; }
+
+    .pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill {
+      padding: 10px 18px;
+      border: 1px solid var(--bd);
+      background: var(--s1);
+      color: var(--tm);
+      font-family: var(--serif);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pill:hover { border-color: var(--bdh); color: var(--tx); }
+    .pill.sel   { border-color: var(--g); color: var(--g); background: rgba(201,169,110,0.09); }
+
+    .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 20px;
+      margin-top: 10px;
+      border-top: 1px solid var(--bd);
+    }
+
+    /* GENERATING */
+    .gen {
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 20px;
+    }
+    .spin {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--bd);
+      border-top-color: var(--g);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .gen-st {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gd);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .gen-q {
+      font-size: 18px;
+      font-style: italic;
+      color: var(--tm);
+      max-width: 340px;
+      line-height: 1.75;
+    }
+
+    /* DASHBOARD */
+    .dh {
+      padding: 32px 0 20px;
+      border-bottom: 1px solid var(--bd);
+      margin-bottom: 20px;
+    }
+    .dh-eye {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gd);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .dh-name { font-size: 30px; font-weight: normal; color: #fff; }
+    .dh-name em { font-style: italic; color: var(--g); }
+    .dh-meta { font-size: 13px; color: var(--tm); margin-top: 5px; font-style: italic; }
+
+    .pstrip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      margin-bottom: 20px;
+      border: 1px solid var(--bd);
+    }
+    .pi { padding: 12px 16px; border-right: 1px solid var(--bd); }
+    .pi:last-child { border-right: none; }
+    .pi-l {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--gd);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .pi-v { font-size: 13px; color: var(--tx); }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 22px;
+      border: 1px solid var(--bd);
+    }
+    .tab {
+      flex: 1;
+      padding: 13px 6px;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--bd);
+      color: var(--tm);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .tab:last-child { border-right: none; }
+    .tab:hover { color: var(--tx); background: var(--s1); }
+    .tab.act   { color: var(--g); background: var(--s1); }
+
+    /* CHAT */
+    .msgs {
+      min-height: 300px;
+      max-height: 420px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 18px;
+      border: 1px solid var(--bd);
+      background: var(--s1);
+      margin-bottom: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bd) transparent;
+    }
+    .msg { display: flex; flex-direction: column; gap: 5px; animation: fadeUp 0.3s ease; }
+    .mfrom {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .msg.fut .mfrom { color: var(--gd); }
+    .msg.usr .mfrom { color: var(--td); }
+    .mbub {
+      font-size: 15px;
+      line-height: 1.75;
+      padding: 12px 15px;
+      border: 1px solid var(--bd);
+    }
+    .msg.fut .mbub {
+      border-color: var(--bdh);
+      background: rgba(201,169,110,0.05);
+      font-style: italic;
+      color: var(--tx);
+    }
+    .msg.usr { align-items: flex-end; }
+    .msg.usr .mbub { background: var(--s2); color: var(--tm); max-width: 85%; }
+
+    .dots { display: flex; gap: 5px; padding: 6px 0; }
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--gd);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+    .cin-row { display: flex; border: 1px solid var(--bd); }
+    .cin {
+      flex: 1;
+      background: var(--s1);
+      border: none;
+      color: var(--tx);
+      font-family: var(--serif);
+      font-size: 15px;
+      font-style: italic;
+      padding: 13px 15px;
+      outline: none;
+    }
+    .cin::placeholder { color: var(--td); }
+
+    .qps { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .qp {
+      padding: 8px 14px;
+      border: 1px solid var(--bd);
+      background: transparent;
+      color: var(--tm);
+      font-family: var(--serif);
+      font-size: 13px;
+      font-style: italic;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .qp:hover { border-color: var(--bdh); color: var(--tx); }
+
+    /* DAILY */
+    .dcard {
+      border: 1px solid var(--bdh);
+      padding: 28px;
+      background: var(--s1);
+      margin-bottom: 16px;
+    }
+    .ddate {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gd);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .dmsg { font-size: 18px; font-style: italic; line-height: 1.8; color: var(--tx); margin-bottom: 20px; }
+    .dsig { font-family: var(--mono); font-size: 11px; color: var(--gd); }
+
+    /* DECISION / EMOTIONAL */
+    .textarea {
+      width: 100%;
+      background: var(--s1);
+      border: 1px solid var(--bd);
+      color: var(--tx);
+      font-family: var(--serif);
+      font-size: 15px;
+      font-style: italic;
+      padding: 14px 16px;
+      outline: none;
+      resize: none;
+      height: 96px;
+      transition: border-color 0.25s;
+      margin-bottom: 12px;
+    }
+    .textarea:focus { border-color: var(--g); }
+    .textarea::placeholder { color: var(--td); }
+
+    .result {
+      border: 1px solid var(--bdh);
+      padding: 22px;
+      background: var(--s1);
+      margin-top: 4px;
+      animation: fadeUp 0.4s ease;
+    }
+    .rlabel {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gd);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .rtext { font-size: 16px; font-style: italic; line-height: 1.8; color: var(--tx); }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gd);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .w100 { width: 100%; text-align: center; }
+    .mb14 { margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- INTRO -->
+  <div class="screen active" id="s-intro">
+    <div class="hero">
+      <div class="orb"></div>
+      <div class="eyebrow">Digital Doppelgänger</div>
+      <h1 class="hero-title">Meet your<br><em>Future Self.</em></h1>
+      <p class="hero-sub">Not who you fantasise about.<br>The version you secretly know you can become.</p>
+      <button class="btn" onclick="go('s-ob1')">Begin the Simulation</button>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="screen" id="s-ob1">
+    <div class="ob-head">
+      <div class="ob-step">Step 1 of 4 — Identity</div>
+      <h2 class="ob-title">Who are you becoming?</h2>
+      <p class="ob-desc">Ground your future self in the real world.</p>
+    </div>
+    <div class="prog">
+      <div class="pdot active"></div><div class="pdot"></div>
+      <div class="pdot"></div><div class="pdot"></div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Your name</label>
+      <input class="finput" id="i-name" type="text" placeholder="What do people call you?" />
+    </div>
+    <div class="fgrp">
+      <label class="flabel">How far into the future?</label>
+      <div class="pills">
+        <button class="pill" onclick="sp(this,'age')">5 years from now</button>
+        <button class="pill" onclick="sp(this,'age')">10 years from now</button>
+        <button class="pill" onclick="sp(this,'age')">20 years from now</button>
+      </div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Future city</label>
+      <input class="finput" id="i-city" type="text" placeholder="Where does your future self live?" />
+    </div>
+    <div class="nav">
+      <button class="btn-ghost" onclick="go('s-intro')">← Back</button>
+      <button class="btn" onclick="go('s-ob2')">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="screen" id="s-ob2">
+    <div class="ob-head">
+      <div class="ob-step">Step 2 of 4 — Ambitions</div>
+      <h2 class="ob-title">What have you built?</h2>
+      <p class="ob-desc">Your future self's material reality.</p>
+    </div>
+    <div class="prog">
+      <div class="pdot done"></div><div class="pdot active"></div>
+      <div class="pdot"></div><div class="pdot"></div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Income level</label>
+      <div class="pills">
+        <button class="pill" onclick="sp(this,'income')">Comfortable</button>
+        <button class="pill" onclick="sp(this,'income')">Financially free</button>
+        <button class="pill" onclick="sp(this,'income')">Wealthy</button>
+        <button class="pill" onclick="sp(this,'income')">Ultra-high net worth</button>
+      </div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Career</label>
+      <input class="finput" id="i-career" type="text" placeholder="What does your future self do?" />
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Relationship status</label>
+      <div class="pills">
+        <button class="pill" onclick="sp(this,'rel')">Deeply partnered</button>
+        <button class="pill" onclick="sp(this,'rel')">Intentionally single</button>
+        <button class="pill" onclick="sp(this,'rel')">Building a family</button>
+        <button class="pill" onclick="sp(this,'rel')">Open & exploring</button>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn-ghost" onclick="go('s-ob1')">← Back</button>
+      <button class="btn" onclick="go('s-ob3')">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="screen" id="s-ob3">
+    <div class="ob-head">
+      <div class="ob-step">Step 3 of 4 — Vitality</div>
+      <h2 class="ob-title">How do you show up?</h2>
+      <p class="ob-desc">Your body, energy, and circle.</p>
+    </div>
+    <div class="prog">
+      <div class="pdot done"></div><div class="pdot done"></div>
+      <div class="pdot active"></div><div class="pdot"></div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Fitness level</label>
+      <div class="pills">
+        <button class="pill" onclick="sp(this,'fit')">Athletic & disciplined</button>
+        <button class="pill" onclick="sp(this,'fit')">Strong & healthy</button>
+        <button class="pill" onclick="sp(this,'fit')">Active & balanced</button>
+        <button class="pill" onclick="sp(this,'fit')">Peaceful & mindful</button>
+      </div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Social life</label>
+      <div class="pills">
+        <button class="pill" onclick="sp(this,'social')">Deep inner circle</button>
+        <button class="pill" onclick="sp(this,'social')">Wide network</button>
+        <button class="pill" onclick="sp(this,'social')">Community builder</button>
+        <button class="pill" onclick="sp(this,'social')">Selective & private</button>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn-ghost" onclick="go('s-ob2')">← Back</button>
+      <button class="btn" onclick="go('s-ob4')">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="screen" id="s-ob4">
+    <div class="ob-head">
+      <div class="ob-step">Step 4 of 4 — Character</div>
+      <h2 class="ob-title">Who have you become?</h2>
+      <p class="ob-desc">The traits your future self has forged.</p>
+    </div>
+    <div class="prog">
+      <div class="pdot done"></div><div class="pdot done"></div>
+      <div class="pdot done"></div><div class="pdot active"></div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">Core traits — pick up to 4</label>
+      <div class="pills tgrid">
+        <button class="pill" onclick="sm(this,'trait',4)">Calm under pressure</button>
+        <button class="pill" onclick="sm(this,'trait',4)">Radically honest</button>
+        <button class="pill" onclick="sm(this,'trait',4)">Deeply empathetic</button>
+        <button class="pill" onclick="sm(this,'trait',4)">Fiercely disciplined</button>
+        <button class="pill" onclick="sm(this,'trait',4)">Creatively driven</button>
+        <button class="pill" onclick="sm(this,'trait',4)">Spiritually grounded</button>
+        <button class="pill" onclick="sm(this,'trait',4)">Intellectually curious</button>
+        <button class="pill" onclick="sm(this,'trait',4)">Quietly confident</button>
+      </div>
+    </div>
+    <div class="fgrp">
+      <label class="flabel">One thing you're leaving behind</label>
+      <input class="finput" id="i-leave" type="text" placeholder="A habit, fear, or pattern you're done with..." />
+    </div>
+    <div class="nav">
+      <button class="btn-ghost" onclick="go('s-ob3')">← Back</button>
+      <button class="btn" onclick="generate()">Awaken My Future Self →</button>
+    </div>
+  </div>
+
+  <!-- GENERATING -->
+  <div class="screen" id="s-gen">
+    <div class="gen">
+      <div class="spin"></div>
+      <div class="gen-st" id="gen-st">Constructing your future self...</div>
+      <p class="gen-q">"The you that exists tomorrow is waiting to speak."</p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="screen" id="s-dash">
+
+    <div class="dh">
+      <div class="dh-eye">You are speaking with</div>
+      <h1 class="dh-name"><em id="d-name">Future You</em></h1>
+      <p class="dh-meta" id="d-meta"></p>
+    </div>
+
+    <div class="pstrip" id="pstrip"></div>
+
+    <div class="tabs">
+      <button class="tab act" onclick="switchTab('chat',this)">Chat</button>
+      <button class="tab"     onclick="switchTab('daily',this)">Daily</button>
+      <button class="tab"     onclick="switchTab('decision',this)">Decision</button>
+      <button class="tab"     onclick="switchTab('emotional',this)">Emotional</button>
+    </div>
+
+    <!-- CHAT TAB -->
+    <div id="t-chat">
+      <div class="qps">
+        <button class="qp" onclick="sendQ(this)">Am I on the right path?</button>
+        <button class="qp" onclick="sendQ(this)">What should I stop doing?</button>
+        <button class="qp" onclick="sendQ(this)">Do you regret anything?</button>
+        <button class="qp" onclick="sendQ(this)">What changed everything?</button>
+      </div>
+      <div class="msgs" id="msgs"></div>
+      <div class="cin-row">
+        <input class="cin" id="cin"
+          placeholder="Ask your future self anything..."
+          onkeydown="if(event.key==='Enter') send()" />
+        <button class="csend" onclick="send()">Send</button>
+      </div>
+    </div>
+
+    <!-- DAILY TAB -->
+    <div id="t-daily" style="display:none">
+      <div class="dcard">
+        <div class="ddate" id="d-date"></div>
+        <div class="dmsg"  id="d-msg">
+          <span style="color:var(--td);font-style:italic;">
+            Press the button below to receive today's message.
+          </span>
+        </div>
+        <div class="dsig" id="d-sig"></div>
+      </div>
+      <button class="btn w100" onclick="loadDaily()">Receive Today's Message</button>
+    </div>
+
+    <!-- DECISION TAB -->
+    <div id="t-decision" style="display:none">
+      <label class="flabel" style="display:block;margin-bottom:8px;">Describe your decision</label>
+      <textarea class="textarea" id="dec-in"
+        placeholder="I'm trying to decide whether to..."></textarea>
+      <button class="btn w100 mb14" onclick="getDecision()">Ask My Future Self</button>
+      <div class="result" id="dec-res" style="display:none">
+        <div class="rlabel">Your future self's perspective</div>
+        <div class="rtext" id="dec-txt"></div>
+      </div>
+    </div>
+
+    <!-- EMOTIONAL TAB -->
+    <div id="t-emotional" style="display:none">
+      <label class="flabel" style="display:block;margin-bottom:10px;">
+        How are you feeling right now?
+      </label>
+      <div class="pills" style="margin-bottom:16px;">
+        <button class="pill" onclick="sp(this,'emo')">Lost</button>
+        <button class="pill" onclick="sp(this,'emo')">Anxious</button>
+        <button class="pill" onclick="sp(this,'emo')">Stuck</button>
+        <button class="pill" onclick="sp(this,'emo')">Lonely</button>
+        <button class="pill" onclick="sp(this,'emo')">Burned out</button>
+        <button class="pill" onclick="sp(this,'emo')">Hopeful but scared</button>
+        <button class="pill" onclick="sp(this,'emo')">Grieving</button>
+        <button class="pill" onclick="sp(this,'emo')">Confused</button>
+      </div>
+      <button class="btn w100 mb14" onclick="getEmo()">Receive Guidance</button>
+      <div class="result" id="emo-res" style="display:none">
+        <div class="rlabel">From your future self</div>
+        <div class="rtext" id="emo-txt"></div>
+      </div>
+    </div>
+
+  </div><!-- /s-dash -->
+
+</div><!-- /app -->
+
+<script>
+  /* ═══════════════════════════════════════════
+     STATE
+  ═══════════════════════════════════════════ */
+  const P   = {};
+  const sel = {};
+
+  /* ═══════════════════════════════════════════
+     NAVIGATION
+  ═══════════════════════════════════════════ */
+  function go(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  /* ═══════════════════════════════════════════
+     PILL SELECTION
+  ═══════════════════════════════════════════ */
+  function sp(el, g) {
+    document.querySelectorAll('.pill[onclick*="\'' + g + '\'"]')
+      .forEach(p => p.classList.remove('sel'));
+    el.classList.add('sel');
+    sel[g] = el.textContent;
+  }
+
+  function sm(el, g, max) {
+    if (el.classList.contains('sel')) { el.classList.remove('sel'); return; }
+    if (document.querySelectorAll('.pill[onclick*="\'' + g + '\'"].sel').length >= max) return;
+    el.classList.add('sel');
+  }
+
+  /* ═══════════════════════════════════════════
+     UTILITIES
+  ═══════════════════════════════════════════ */
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  /* ═══════════════════════════════════════════
+     RESPONSE ENGINE
+     All responses generated locally — no
+     external API required.
+  ═══════════════════════════════════════════ */
+
+  function introResponse() {
+    const o = pick([
+      "I remember standing exactly where you are — unsure, restless, wondering if any of it would actually work out.",
+      "You don't know it yet, but the decision you're quietly afraid to make is the one that changes everything.",
+      "There's something you keep telling yourself you'll do 'when the time is right.' I'm here to tell you — the time is now.",
+      "I know you. I know the doubts you don't say out loud. I lived through every single one of them."
+    ]);
+    const m = pick([
+      `The version of you standing in ${P.city}, ${P.income} and ${P.fit} — that's real. I'm living proof.`,
+      `Becoming ${P.career} wasn't a straight line. There were months I wanted to quit. But leaving behind ${P.leave} was the first real turning point.`,
+      `The day I stopped carrying ${P.leave} was the day things started shifting. You're closer than you think.`,
+      `Living in ${P.city} and being ${P.fit} didn't happen by accident. It happened because I made one small commitment and kept it.`
+    ]);
+    const c = pick([
+      "I'm here now. Ask me anything — I've already lived what you're afraid of.",
+      "What do you need to hear today?",
+      "What question have you been afraid to ask yourself?",
+      "The conversation starts whenever you're ready."
+    ]);
+    return o + ' ' + m + ' ' + c;
+  }
+
+  function chatResponse(question) {
+    const q = question.toLowerCase();
+
+    if (q.match(/right path|on track|going well|right direction/)) return pick([
+      `Yes — but not in the way you expect. The path isn't straight. There's a detour coming that will feel like failure. It isn't. It's the shortcut.`,
+      `The fact that you're even asking means you're paying attention. That's more than most people do. Keep going — the direction is right even when the pace feels wrong.`,
+      `You're on the path. What you're missing is patience with yourself. The version of you that becomes ${P.career} in ${P.city} didn't rush — they committed.`
+    ]);
+
+    if (q.match(/stop|quit|avoid|give up/)) return pick([
+      `Stop waiting for certainty before you act. Certainty never came for me either — I moved anyway. That's the difference.`,
+      `Stop explaining yourself to people who aren't invested in your growth. Your energy is finite. Protect it.`,
+      `Stop treating ${P.leave} like it's part of your identity. It's a habit. And habits can be replaced. I proved that.`
+    ]);
+
+    if (q.match(/regret|mistake|wrong|wish/)) return pick([
+      `I regret waiting so long to take myself seriously. Not the failures — those taught me everything. The waiting was the real waste.`,
+      `My only real regret is how long I held onto ${P.leave}. The moment I let it go, the space it left was filled with something much better.`,
+      `I don't regret the hard years. I regret the years I spent being small on purpose, trying to make others comfortable.`
+    ]);
+
+    if (q.match(/changed|turning point|difference|breakthrough/)) return pick([
+      `The day I stopped asking permission. Not from others — from myself. I gave myself permission to want what I actually wanted.`,
+      `One conversation I almost didn't have. One door I almost didn't knock on. The smallest moments have the longest shadows.`,
+      `Becoming ${P.fit} changed more than my body. It changed how I showed up for everything — my work, my relationships, my thinking.`
+    ]);
+
+    if (q.match(/lonely|alone|isolated|connection/)) return pick([
+      `I felt that too. For longer than I'd like to admit. The loneliness wasn't a signal that something was wrong with me — it was a signal that I was between versions of myself.`,
+      `Building ${P.social} took time. Real connection doesn't come from being available — it comes from being honest. Lead with honesty and the right people stay.`,
+      `The people who matter are still finding you. Some of the most important relationships in my life started after the loneliest period.`
+    ]);
+
+    if (q.match(/money|finance|rich|wealth|income/)) return pick([
+      `Becoming ${P.income} wasn't about earning more first. It was about wasting less — less time, less energy, less attention on things that didn't compound.`,
+      `The money followed the clarity. When I got clear on what I was building and why, the income became a byproduct, not the goal.`,
+      `I stopped treating money as a score and started treating it as fuel. Fuel for what actually mattered. That shift changed everything.`
+    ]);
+
+    if (q.match(/afraid|fear|scared|anxious|worry/)) return pick([
+      `I was afraid of the exact same thing. The fear didn't go away when I acted — it just got quieter. Action is louder than fear.`,
+      `Fear is a signal, not a stop sign. What you're afraid of is usually the thing most worth doing.`,
+      `I spent years being afraid of the wrong things. The thing I feared most never happened. Adapt. You're better at it than you think.`
+    ]);
+
+    if (q.match(/relationship|love|partner|marriage/)) return pick([
+      `Being ${P.rel} taught me that the right relationship doesn't complete you — it challenges you. Look for someone who makes you want to be the version of yourself you're becoming.`,
+      `The most important relationship is the one you have with your own word. Keep your commitments to yourself first. Everything else follows.`,
+      `I used to look for someone to share my life with before I had a life I was proud of. Build the life first. The right person is attracted to that energy.`
+    ]);
+
+    if (q.match(/purpose|meaning|why|mission|point/)) return pick([
+      `Purpose isn't found. It's built — one decision at a time, one kept promise at a time. You're building it right now, whether you feel it or not.`,
+      `My purpose clarified through doing, not through thinking. Stop waiting for revelation. Start moving. The meaning emerges in motion.`,
+      `Being ${P.career} in ${P.city} gave me structure, but my purpose is in how I show up — with ${P.traits}. That's not a job description. That's a life.`
+    ]);
+
+    if (q.match(/happy|happiness|joy|content/)) return pick([
+      `Happiness wasn't something I found at the destination. It appeared in small moments along the way — moments I almost missed because I was rushing toward "someday."`,
+      `I stopped chasing happiness and started building it. The difference is enormous. Happiness is a byproduct of alignment — of your actions matching your values.`,
+      `The version of me in ${P.city} is not happy every day. But I'm fulfilled most days. That's a much richer thing.`
+    ]);
+
+    /* Generic fallback */
+    return pick([
+      `I've thought about this too. Here's what I know: the answer you're looking for isn't somewhere out there — it's in the pattern of your own decisions. Look there first.`,
+      `${P.name}, I remember asking myself the same thing. The answer came not from someone else, but from a moment of radical honesty. What does your gut already know?`,
+      `This question matters more than you realise. The fact that you're sitting with it instead of running from it — that's already growth.`,
+      `The version of you in ${P.city}, ${P.income} — I didn't become this by finding perfect answers. I became this by refusing to accept comfortable lies.`,
+      `Trust the process more than you trust your doubts. Your doubts are loud but they are not wise. They haven't seen what I've seen.`,
+      `Don't look for certainty. Look for alignment. When your actions align with who you're becoming — ${P.traits} — certainty becomes irrelevant.`
+    ]);
+  }
+
+  function dailyResponse() {
+    return pick([
+      `Today, do one thing you've been postponing because it scares you. Not the biggest thing — just the next thing. The version of you that became ${P.career} in ${P.city} didn't wait for courage. They acted first and let courage catch up.`,
+      `This morning, before anything else, remind yourself why you started — the raw, honest reason. Not the polished version you tell other people. That reason is still valid. It still matters.`,
+      `Leaving behind ${P.leave} wasn't a single dramatic moment for me. It was a hundred small moments of choosing differently. Today is one of those moments. Choose differently.`,
+      `Being ${P.fit} and ${P.income} didn't come from doing extraordinary things. It came from doing ordinary things with extraordinary consistency. Today is an ordinary day. Use it.`,
+      `I remember a day just like today — unremarkable on the surface, pivotal underneath. You won't know which days are turning points until you're where I am. Treat every day like it might be one. Because it might.`,
+      `The traits I'm most proud of — ${P.traits} — weren't installed in me. They were practiced. Today, practice one of them deliberately. Notice the opportunity and take it. That's how character is built.`,
+      `Something I wish I'd known: the people around you right now reflect who you are right now, not who you're becoming. As you grow, your circle will shift. Don't resist it. Trust it.`,
+      `Today, one hour on the thing that actually matters. Not the urgent thing — the important thing. That one hour, done consistently, is how ${P.career} in ${P.city} happened.`
+    ]);
+  }
+
+  function decisionResponse(context) {
+    return pick([
+      `When I faced a similar crossroads, the question I asked was: which choice will I be proud of in ten years? Not comfortable — proud. Those are different things. Based on who you're becoming — ${P.career}, ${P.income}, ${P.fit} — I think you already know the answer.`,
+      `Here's what I'd ask you: which decision is the future version of you — ${P.traits} — more likely to make? Don't decide as who you are today. Decide as who you're becoming. That's the only advice I have worth giving.`,
+      `This decision comes down to one question: are you making it from fear or from values? Fear avoids loss. Values pursue something real. You're working on leaving behind ${P.leave} — use that as your compass here.`,
+      `I made a similar decision and carried it for years. What I can tell you is: the outcome matters less than how you make the choice. Make it consciously, make it aligned, and you'll be okay either way. Regret comes from unconscious choices, not hard ones.`,
+      `The hard choice and the right choice are usually the same choice. You already know which path leads to ${P.city} and ${P.income}. The question is whether you're willing to choose discomfort now for alignment later.`
+    ]);
+  }
+
+  function emotionalResponse(emotion) {
+    const e = emotion.toLowerCase();
+    const map = {
+      lost: [
+        `I was lost for two years — real, directionless, frightening lost. What I discovered is that "lost" often means you've outgrown the map, not that there's no path. You're between identities right now. That's not failure. That's transformation.`,
+        `When I felt lost, the worst thing I did was pretend I wasn't. The best thing I did was admit it to one person I trusted. You don't need a plan right now. You need honesty. Start there.`
+      ],
+      anxious: [
+        `Anxiety was my constant companion for years. What helped me wasn't eliminating it — it was learning what it was actually pointing at. Your anxiety is pointing at something you care about deeply. Don't medicate the signal. Listen to it.`,
+        `I remember the anxiety well. Here's what I know now: most of what I was anxious about never happened. And the things that did — I was more capable of handling them than I ever believed. So are you.`
+      ],
+      stuck: [
+        `Stuck usually means one of two things: you know the next move but you're afraid to make it, or you're trying to move in a direction that isn't yours. Which one is it? Be honest. The answer will unstick you faster than any advice I can give.`,
+        `The times I felt most stuck were right before my biggest leaps. The resistance you feel isn't the universe saying no — it's you saying yes to something that actually matters. Push through it.`
+      ],
+      lonely: [
+        `I felt lonely for a long time — even surrounded by people. The loneliness wasn't about presence. It was about being unseen. You're not unseen. You're just not yet in the right rooms. Keep walking toward ${P.city}, toward ${P.career}. The right people are in those rooms.`,
+        `Loneliness was the thing I was most ashamed of and least willing to admit. Admitting it — to myself first, then to one person — broke something open. You don't have to carry this alone.`
+      ],
+      'burned out': [
+        `I burned out badly. It took months to recover. What I learned: burnout isn't caused by hard work. It's caused by work without meaning, or work without recovery. Which one is yours? The answer changes the fix entirely.`,
+        `When you're burned out, the instinct is to push harder. It's the wrong move. What you need right now is rest without guilt. Rest is not surrender. It's maintenance. Take it.`
+      ],
+      'hopeful but scared': [
+        `That feeling — hopeful but scared — is the most honest emotion there is. It means you're standing at the edge of something real. The hope is the truth. The fear is just volume. Turn down the volume. Keep the hope.`,
+        `I lived in that exact feeling for over a year before things shifted. The hope was right. The fear was wrong about the outcome. Don't let fear veto hope.`
+      ],
+      grieving: [
+        `Grief is the price of love — of things that mattered. Don't rush it. I tried to rush mine and it followed me for years. Let it move through you at its own pace. On the other side of it is a clarity that nothing else can teach.`,
+        `I grieved too. And I can tell you: the loss shaped me in ways I couldn't predict — not to make me "stronger" in a cliché sense, but to make me more specific about what I value. That specificity is worth something.`
+      ],
+      confused: [
+        `Confusion is not stupidity. It's usually intelligence confronting a genuinely complex situation. Stop demanding clarity before you act. Act in the direction of your values and let clarity come from motion.`,
+        `When I was confused, I stopped asking "what should I do?" and started asking "what do I actually care about?" Confusion about what to do dissolves when you get clear on who you are. Start there.`
+      ]
+    };
+
+    for (const key of Object.keys(map)) {
+      if (e.includes(key)) return pick(map[key]);
+    }
+
+    return pick([
+      `Whatever you're feeling right now is valid. I've felt some version of it too. What I've learned is that feelings are information, not verdicts. This isn't the final word on who you are or where you're going.`,
+      `I won't tell you it passes quickly — sometimes it doesn't. But I will tell you: you are more resilient than your current feelings suggest. I know because I lived through mine. And I'm still here — in ${P.city}, ${P.income}, ${P.fit}. You'll get here too.`
+    ]);
+  }
+
+  /* ═══════════════════════════════════════════
+     GENERATE
+  ═══════════════════════════════════════════ */
+  async function generate() {
+    P.name   = document.getElementById('i-name').value.trim()   || 'You';
+    P.age    = sel['age']    || '10 years from now';
+    P.city   = document.getElementById('i-city').value.trim()   || 'a new city';
+    P.income = sel['income'] || 'financially free';
+    P.career = document.getElementById('i-career').value.trim() || 'doing meaningful work';
+    P.rel    = sel['rel']    || 'deeply connected';
+    P.fit    = sel['fit']    || 'strong & healthy';
+    P.social = sel['social'] || 'a close circle';
+    P.traits = [...document.querySelectorAll('.pill[onclick*="\'trait\'"].sel')]
+               .map(p => p.textContent).join(', ') || 'calm and wise';
+    P.leave  = document.getElementById('i-leave').value.trim()  || 'old fears';
+
+    go('s-gen');
+
+    const steps = [
+      'Constructing your future self...',
+      'Weaving your story forward...',
+      'Almost ready...'
+    ];
+    let si = 0;
+    const iv = setInterval(() => {
+      const el = document.getElementById('gen-st');
+      if (el) el.textContent = steps[Math.min(si++, steps.length - 1)];
+    }, 900);
+
+    await delay(2800);
+    clearInterval(iv);
+
+    document.getElementById('d-name').textContent = P.name + ', ' + P.age;
+    document.getElementById('d-meta').textContent = P.career + ' · ' + P.city + ' · ' + P.income;
+
+    document.getElementById('pstrip').innerHTML = [
+      ['Fitness', P.fit], ['Social', P.social],
+      ['Relationship', P.rel], ['Leaving behind', P.leave]
+    ].map(([l, v]) =>
+      `<div class="pi"><div class="pi-l">${l}</div><div class="pi-v">${v}</div></div>`
+    ).join('');
+
+    addMsg('fut', introResponse());
+    go('s-dash');
+  }
+
+  /* ═══════════════════════════════════════════
+     CHAT
+  ═══════════════════════════════════════════ */
+  function addMsg(role, txt) {
+    const box = document.getElementById('msgs');
+    const d   = document.createElement('div');
+    d.className = 'msg ' + role;
+    d.innerHTML =
+      `<div class="mfrom">${role === 'fut' ? 'Future You' : 'You'}</div>` +
+      `<div class="mbub">${txt}</div>`;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function addThinking() {
+    const box = document.getElementById('msgs');
+    const d   = document.createElement('div');
+    d.className = 'msg fut';
+    d.id = 'think';
+    d.innerHTML =
+      `<div class="mfrom">Future You</div>` +
+      `<div class="mbub"><div class="dots">` +
+      `<div class="dot"></div><div class="dot"></div><div class="dot"></div>` +
+      `</div></div>`;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function send() {
+    const inp = document.getElementById('cin');
+    const txt = inp.value.trim();
+    if (!txt) return;
+    inp.value = '';
+    addMsg('usr', txt);
+    addThinking();
+    await delay(900 + Math.random() * 600);
+    document.getElementById('think')?.remove();
+    addMsg('fut', chatResponse(txt));
+  }
+
+  function sendQ(el) {
+    document.getElementById('cin').value = el.textContent;
+    send();
+  }
+
+  /* ═══════════════════════════════════════════
+     TABS
+  ═══════════════════════════════════════════ */
+  function switchTab(t, tab) {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('act'));
+    tab.classList.add('act');
+    ['chat', 'daily', 'decision', 'emotional'].forEach(m => {
+      document.getElementById('t-' + m).style.display = m === t ? 'block' : 'none';
+    });
+  }
+
+  /* ═══════════════════════════════════════════
+     DAILY
+  ═══════════════════════════════════════════ */
+  async function loadDaily() {
+    const today = new Date().toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric'
+    });
+    document.getElementById('d-date').textContent = today;
+    document.getElementById('d-msg').innerHTML =
+      '<div class="loading"><div class="dot"></div><div class="dot"></div>' +
+      '<div class="dot"></div><span style="margin-left:8px">Receiving...</span></div>';
+    await delay(1200);
+    document.getElementById('d-msg').textContent  = dailyResponse();
+    document.getElementById('d-sig').textContent  = '— ' + P.name + ', ' + P.age;
+  }
+
+  /* ═══════════════════════════════════════════
+     DECISION
+  ═══════════════════════════════════════════ */
+  async function getDecision() {
+    const txt = document.getElementById('dec-in').value.trim();
+    if (!txt) return;
+    const res = document.getElementById('dec-res');
+    res.style.display = 'block';
+    document.getElementById('dec-txt').innerHTML =
+      '<div class="loading"><div class="dot"></div><div class="dot"></div>' +
+      '<div class="dot"></div><span style="margin-left:8px">Thinking...</span></div>';
+    await delay(1400);
+    document.getElementById('dec-txt').textContent = decisionResponse(txt);
+  }
+
+  /* ═══════════════════════════════════════════
+     EMOTIONAL
+  ═══════════════════════════════════════════ */
+  async function getEmo() {
+    const emo = sel['emo'];
+    if (!emo) return;
+    const res = document.getElementById('emo-res');
+    res.style.display = 'block';
+    document.getElementById('emo-txt').innerHTML =
+      '<div class="loading"><div class="dot"></div><div class="dot"></div>' +
+      '<div class="dot"></div><span style="margin-left:8px">Listening...</span></div>';
+    await delay(1200);
+    document.getElementById('emo-txt').textContent = emotionalResponse(emo);
+  }
+</script>
+
+</body>
+</html>
