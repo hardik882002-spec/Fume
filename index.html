@@ -612,7 +612,7 @@
       <div class="divider"></div>
       <p class="hero-sub">Not who you fantasise about.<br>The version you secretly know<br>you can become.</p>
 
-      <div class="setup-box">
+      <div class="setup-box" id="setup-box">
         <div class="setup-title">Free setup — Groq API key (60 seconds)</div>
         <div class="setup-desc">
           Groq is completely free — no credit card, no subscription.
@@ -624,7 +624,7 @@
             placeholder="Paste your Groq API key here  (gsk_...)" />
           <button class="key-btn" onclick="saveKey()">Save</button>
         </div>
-        <div class="key-saved" id="key-saved">✓ Key saved — ready to begin</div>
+
         <div class="key-steps">
           <span>1</span> → console.groq.com &nbsp;·&nbsp;
           <span>2</span> → Sign up free &nbsp;·&nbsp;
@@ -633,6 +633,7 @@
         </div>
       </div>
 
+      <div id="key-confirmed" style="display:none;align-items:center;gap:10px;margin-bottom:30px;padding:14px 20px;border:1px solid var(--bdh);background:var(--s1);width:100%;"><span class="ai-dot" style="flex-shrink:0"></span><span style="font-family:var(--mono);font-size:10px;color:var(--g);letter-spacing:0.16em;text-transform:uppercase;">Groq connected · Ready</span><button onclick="resetKey()" style="margin-left:auto;background:none;border:none;font-family:var(--mono);font-size:9px;color:var(--td);letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;text-decoration:underline;">change key</button></div>
       <button class="btn" id="begin-btn" onclick="beginCheck()" disabled>Begin the Simulation</button>
       <div class="foot" style="margin-top:32px;">Groq · Llama 3.3 70B · Free · Key stored only in your browser</div>
     </div>
@@ -893,16 +894,19 @@
     const v = document.getElementById('api-key-input').value.trim();
     if (!v) return;
     localStorage.setItem('dd_groq_key', v);
-    document.getElementById('key-saved').style.display = 'block';
+    collapseSetupBox();
+  }
+
+  function collapseSetupBox() {
+    document.getElementById('setup-box').style.display = 'none';
+    document.getElementById('key-confirmed').style.display = 'flex';
     document.getElementById('begin-btn').disabled = false;
   }
 
   window.addEventListener('DOMContentLoaded', () => {
     const saved = getKey();
     if (saved) {
-      document.getElementById('api-key-input').value = saved;
-      document.getElementById('key-saved').style.display = 'block';
-      document.getElementById('begin-btn').disabled = false;
+      collapseSetupBox();
     }
     document.getElementById('api-key-input').addEventListener('input', e => {
       document.getElementById('begin-btn').disabled = e.target.value.trim().length < 10;
@@ -911,6 +915,14 @@
       if (e.key === 'Enter') saveKey();
     });
   });
+
+  function resetKey() {
+    localStorage.removeItem('dd_groq_key');
+    document.getElementById('key-confirmed').style.display = 'none';
+    document.getElementById('setup-box').style.display = 'block';
+    document.getElementById('api-key-input').value = '';
+    document.getElementById('begin-btn').disabled = true;
+  }
 
   function beginCheck() {
     const v = document.getElementById('api-key-input').value.trim();
