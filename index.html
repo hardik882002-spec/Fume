@@ -405,31 +405,6 @@
   </div>
 
   <!-- ══ GROQ KEY SETUP (first time only) ══ -->
-  <div class="screen" id="s-key">
-    <div style="min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0;">
-      <div class="sigil" style="margin-bottom:24px;">
-        <svg viewBox="0 0 72 72" fill="none"><circle cx="36" cy="36" r="34" stroke="rgba(201,169,110,0.3)" stroke-width="0.75"/><circle cx="36" cy="36" r="10" fill="rgba(154,120,64,0.3)"/><circle cx="36" cy="36" r="10" stroke="rgba(201,169,110,0.6)" stroke-width="0.75"/></svg>
-      </div>
-      <div class="eyebrow" style="margin-bottom:12px;">One last thing</div>
-      <p style="font-size:20px;font-style:italic;font-weight:300;color:var(--tm);max-width:300px;text-align:center;line-height:1.9;margin-bottom:32px;">Add your free Groq key to power the AI conversations.</p>
-      <div class="setup-box" style="max-width:440px;">
-        <div class="setup-title">Free Groq API Key</div>
-        <div class="setup-desc">
-          Get yours in 60 seconds at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — no credit card needed. Saved securely to your account.
-        </div>
-        <div class="key-row">
-          <input class="key-input" id="api-key-input" type="password" placeholder="Paste your key here  (gsk_...)" />
-          <button class="key-btn" onclick="saveGroqKey()">Save & Continue</button>
-        </div>
-        <div class="key-steps">
-          <span>1</span> → console.groq.com &nbsp;·&nbsp;
-          <span>2</span> → Sign up free &nbsp;·&nbsp;
-          <span>3</span> → API Keys → Create &nbsp;·&nbsp;
-          <span>4</span> → Paste above
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ══ STEP 1 ══ -->
   <div class="screen" id="s-ob1">
@@ -696,6 +671,7 @@
   let currentUser = null;
   const GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions";
   const GROQ_MODEL = "llama-3.3-70b-versatile";
+  const GROQ_KEY   = "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";
 
   /* ── Expose helpers to global scope ── */
   window.signIn          = signIn;
@@ -703,7 +679,6 @@
   window.signOut         = doSignOut;
   window.forgotPassword  = forgotPassword;
   window.authTab         = authTab;
-  window.saveGroqKey     = saveGroqKey;
   window.generate        = generate;
   window.send            = send;
   window.sendQ           = sendQ;
@@ -728,9 +703,7 @@
       currentUser = user;
       document.getElementById('topbar-email').textContent = user.email;
       const userData = await loadUserData(user.uid);
-      if (!userData.groqKey) {
-        go('s-key');
-      } else if (!userData.profile) {
+      if (!userData.profile) {
         go('s-ob1');
       } else {
         loadProfile(userData.profile);
@@ -836,19 +809,6 @@
     await setDoc(doc(db, 'users', currentUser.uid), data, { merge: true });
   }
 
-  /* ── GROQ KEY ── */
-  async function saveGroqKey() {
-    const k = document.getElementById('api-key-input').value.trim();
-    if (!k || k.length < 10) return;
-    await saveUserData({ groqKey: k });
-    const userData = await loadUserData(currentUser.uid);
-    if (!userData.profile) go('s-ob1');
-    else { loadProfile(userData.profile); await loadChatHistory(currentUser.uid); renderDashboard(); go('s-dash'); }
-  }
-
-  function getGroqKey() {
-    return window._groqKey || '';
-  }
 
   /* ── PILLS ── */
   function sp(el, g) {
@@ -865,7 +825,6 @@
   /* ── PROFILE ── */
   function loadProfile(profile) {
     Object.assign(P, profile);
-    window._groqKey = profile.groqKey || '';
   }
 
   function renderDashboard() {
@@ -892,9 +851,7 @@ Occasionally end with one gentle reflective question.`;
 
   /* ── GROQ CALL ── */
   async function callGroq(userMsg, systemOverride, historyOverride) {
-    const userData = await loadUserData(currentUser.uid);
-    const key = userData.groqKey || '';
-    if (!key) { go('s-key'); throw new Error('No Groq key found.'); }
+    const key = GROQ_KEY;
 
     const system  = systemOverride || buildSystem();
     const history = historyOverride !== undefined ? historyOverride : chatHistory;
